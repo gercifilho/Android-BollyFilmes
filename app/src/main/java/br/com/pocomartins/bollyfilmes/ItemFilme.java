@@ -1,12 +1,13 @@
 package br.com.pocomartins.bollyfilmes;
 
+import java.io.Serializable;
 import java.net.URI;
 
 /**
  * Created by Poço Martins on 1/21/2017.
  */
 
-public class ItemFilme {
+public class ItemFilme implements Serializable {
 
     private String id;
 
@@ -20,7 +21,7 @@ public class ItemFilme {
 
     private String dataLancamento;
 
-    public ItemFilme(String titulo, String descricao, String dataLancamento, float avaliacao) {
+    public ItemFilme (String titulo, String descricao, String dataLancamento, float avaliacao) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.dataLancamento = dataLancamento;
