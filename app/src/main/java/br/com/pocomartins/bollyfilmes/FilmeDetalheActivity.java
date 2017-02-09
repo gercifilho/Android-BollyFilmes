@@ -1,11 +1,10 @@
 package br.com.pocomartins.bollyfilmes;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.RatingBar;
-import android.widget.TextView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
 
 public class FilmeDetalheActivity extends AppCompatActivity {
 
@@ -17,19 +16,15 @@ public class FilmeDetalheActivity extends AppCompatActivity {
         Intent intent = getIntent();
         ItemFilme itemFilme = (ItemFilme) intent.getSerializableExtra(MainActivity.KEY_FILME);
 
-        TextView titulo = (TextView) findViewById(R.id.item_titulo);
-        titulo.setText(itemFilme.getTitulo());
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        TextView data = (TextView) findViewById(R.id.item_data);
-        data.setText(itemFilme.getDataLancamento());
+        FilmeDetalheFragment fragment = new FilmeDetalheFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(MainActivity.KEY_FILME, itemFilme);
+        fragment.setArguments(bundle);
 
-        TextView descricao = (TextView) findViewById(R.id.item_desc);
-        descricao.setText(itemFilme.getTitulo());
-
-        RatingBar avaliacao = (RatingBar) findViewById(R.id.item_avaliacao);
-        avaliacao.setRating(itemFilme.getAvaliacao());
-
-        Button btntrailler = (Button) findViewById(R.id.item_btn_trailler);
+        fragmentTransaction.commit();
 
     }
 }
