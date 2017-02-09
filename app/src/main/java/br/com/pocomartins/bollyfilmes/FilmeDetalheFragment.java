@@ -5,7 +5,6 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -38,12 +37,10 @@ public class FilmeDetalheFragment extends Fragment {
         data.setText(itemFilme.getDataLancamento());
 
         TextView descricao = (TextView) view.findViewById(R.id.item_desc);
-        descricao.setText(itemFilme.getTitulo());
+        descricao.setText(itemFilme.getDescricao());
 
         RatingBar avaliacao = (RatingBar) view.findViewById(R.id.item_avaliacao);
         avaliacao.setRating(itemFilme.getAvaliacao());
-
-        Button btntrailler = (Button) view.findViewById(R.id.item_btn_trailler);
 
         return view;
     }
