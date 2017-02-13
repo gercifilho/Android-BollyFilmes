@@ -19,6 +19,8 @@ public class FilmesAdapter extends ArrayAdapter<ItemFilme> {
 
     private static final int VIEM_TYPE_DESTAQUE = 0;
     private static final int VIEM_TYPE_ITEM = 1;
+    private boolean useFilmeDestaque = false;
+
 
 
     public FilmesAdapter(Context context, ArrayList<ItemFilme> filmes) {
@@ -91,11 +93,15 @@ public class FilmesAdapter extends ArrayAdapter<ItemFilme> {
 
     @Override
     public int getItemViewType(int position) {
-        return (position == 0 ? VIEM_TYPE_DESTAQUE : VIEM_TYPE_ITEM);
+        return (position == 0 && useFilmeDestaque? VIEM_TYPE_DESTAQUE : VIEM_TYPE_ITEM);
     }
 
     @Override
     public int getViewTypeCount() {
         return 2;
+    }
+
+    public void setUseFilmeDestaque(boolean useFilmeDestaque) {
+        this.useFilmeDestaque = useFilmeDestaque;
     }
 }

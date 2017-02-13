@@ -1,7 +1,7 @@
 package br.com.pocomartins.bollyfilmes;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +18,14 @@ import java.util.ArrayList;
 
 public class MainFragment extends Fragment {
 
+    private int posicaoItem = ListView.INVALID_POSITION;
+
+    private static final String KEY_POSICAO = "SELECIONADO";
+
+    private ListView listView;
+
+    private boolean useFilmeDestaque = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +40,7 @@ public class MainFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        ListView listView = (ListView) view.findViewById(R.id.list_filmes);
+        listView = (ListView) view.findViewById(R.id.list_filmes);
         final ArrayList<ItemFilme> arrayList = new ArrayList<>();
         arrayList.add(new ItemFilme("Homem Aranha", "Filme de heroi picado por uma aranha", "10/04/2017", 4));
         arrayList.add(new ItemFilme("Capitão America", "Filme de heroi picado por uma capitao america", "11/04/2017", 5));
@@ -43,21 +51,44 @@ public class MainFragment extends Fragment {
         arrayList.add(new ItemFilme("Homem Formiga", "Filme de heroi picado por um Homem Formiga", "13/04/2017", 4.5f));
 
         FilmesAdapter adapter = new FilmesAdapter(getContext(), arrayList);
+        adapter.setUseFilmeDestaque(useFilmeDestaque);
 
         listView.setAdapter(adapter);
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ItemFilme itemFilme = arrayList.get(position);
-                Intent intent = new Intent(getContext(), FilmeDetalheActivity.class);
-                intent.putExtra(MainActivity.KEY_FILME, itemFilme);
-                startActivity(intent);
+                view.setSelected(true);
+                Callback callback = (Callback) getActivity();
+                callback.onItemSelect(itemFilme);
+                posicaoItem = position;
             }
         });
 
         // Inflate the layout for this fragment
+        if(savedInstanceState != null && savedInstanceState.containsKey(KEY_POSICAO)) {
+            posicaoItem = savedInstanceState.getInt(KEY_POSICAO);
+        }
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        if(posicaoItem != ListView.INVALID_POSITION) {
+            outState.putInt(KEY_POSICAO, posicaoItem);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        if(posicaoItem != ListView.INVALID_POSITION && listView != null) {
+            listView.smoothScrollToPosition(posicaoItem);
+        }
+        super.onViewStateRestored(savedInstanceState);
     }
 
     @Override
@@ -75,6 +106,14 @@ public class MainFragment extends Fragment {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public interface Callback {
+        void onItemSelect(ItemFilme itemFilme);
+    }
+
+    public void setUseFilmeDestaque(boolean useFilmeDestaque) {
+        this.useFilmeDestaque = useFilmeDestaque;
     }
 
 }
