@@ -24,6 +24,8 @@ public class MainFragment extends Fragment {
 
     private ListView listView;
 
+    private FilmesAdapter adapter;
+
     private boolean useFilmeDestaque = false;
 
     @Override
@@ -50,7 +52,7 @@ public class MainFragment extends Fragment {
         arrayList.add(new ItemFilme("Hulk", "Filme de heroi picado por um Hulk", "20/04/2017", 2));
         arrayList.add(new ItemFilme("Homem Formiga", "Filme de heroi picado por um Homem Formiga", "13/04/2017", 4.5f));
 
-        FilmesAdapter adapter = new FilmesAdapter(getContext(), arrayList);
+        adapter = new FilmesAdapter(getContext(), arrayList);
         adapter.setUseFilmeDestaque(useFilmeDestaque);
 
         listView.setAdapter(adapter);
@@ -114,6 +116,9 @@ public class MainFragment extends Fragment {
 
     public void setUseFilmeDestaque(boolean useFilmeDestaque) {
         this.useFilmeDestaque = useFilmeDestaque;
+        if (adapter != null) {
+            adapter.setUseFilmeDestaque(useFilmeDestaque);
+        }
     }
 
 }
