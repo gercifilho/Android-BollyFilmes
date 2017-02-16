@@ -1,5 +1,7 @@
 package br.com.pocomartins.bollyfilmes;
 
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -13,7 +15,14 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainFragment extends Fragment {
@@ -44,13 +53,6 @@ public class MainFragment extends Fragment {
 
         listView = (ListView) view.findViewById(R.id.list_filmes);
         final ArrayList<ItemFilme> arrayList = new ArrayList<>();
-        arrayList.add(new ItemFilme("Homem Aranha", "Filme de heroi picado por uma aranha", "10/04/2017", 4));
-        arrayList.add(new ItemFilme("Capitão America", "Filme de heroi picado por uma capitao america", "11/04/2017", 5));
-        arrayList.add(new ItemFilme("Super Amigos", "Filme de heroi picado por uma super amigo", "12/04/2017", 3.5f));
-        arrayList.add(new ItemFilme("Avangers", "Filme de heroi picado por uma Avangers", "13/04/2017", 5));
-        arrayList.add(new ItemFilme("Homem de Ferro", "Filme de heroi picado por um Homem de Ferro", "15/04/2017", 5));
-        arrayList.add(new ItemFilme("Hulk", "Filme de heroi picado por um Hulk", "20/04/2017", 2));
-        arrayList.add(new ItemFilme("Homem Formiga", "Filme de heroi picado por um Homem Formiga", "13/04/2017", 4.5f));
 
         adapter = new FilmesAdapter(getContext(), arrayList);
         adapter.setUseFilmeDestaque(useFilmeDestaque);
@@ -73,6 +75,7 @@ public class MainFragment extends Fragment {
         if(savedInstanceState != null && savedInstanceState.containsKey(KEY_POSICAO)) {
             posicaoItem = savedInstanceState.getInt(KEY_POSICAO);
         }
+        new FilmesAsyncTask().execute();
         return view;
     }
 
@@ -110,15 +113,85 @@ public class MainFragment extends Fragment {
         }
     }
 
-    public interface Callback {
-        void onItemSelect(ItemFilme itemFilme);
-    }
-
     public void setUseFilmeDestaque(boolean useFilmeDestaque) {
         this.useFilmeDestaque = useFilmeDestaque;
         if (adapter != null) {
             adapter.setUseFilmeDestaque(useFilmeDestaque);
         }
+    }
+
+    public class FilmesAsyncTask extends AsyncTask<Void, Void, List<ItemFilme>> {
+
+        @Override
+        protected List<ItemFilme> doInBackground(Void... params) {
+
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+
+            try {
+
+                String urlBase = "https://api.themoviedb.org/3/movie/popular";
+                String apiKey = "api_key";
+                String language = "language";
+
+                Uri uriapi = Uri.parse(urlBase).buildUpon()
+                        .appendQueryParameter(apiKey, BuildConfig.TMDB_API_KEY)
+                        .appendQueryParameter(language,"pt-BR")
+                        .build();
+
+                URL url = new URL(uriapi.toString());
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                InputStream inputStream = urlConnection.getInputStream();
+                if(inputStream == null) {
+                    return null;
+                }
+
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+                String linha;
+                StringBuffer buffer = new StringBuffer();
+
+                while ((linha = reader.readLine()) != null) {
+                    buffer.append(linha);
+                    buffer.append("\n");
+                }
+
+                return JsonUtil.fromJsonToList(buffer.toString());
+
+
+            } catch(IOException e) {
+                e.printStackTrace();
+
+            } finally {
+                if(urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+
+                if(reader != null){
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(List<ItemFilme> itemFilmes) {
+
+            adapter.clear();
+            adapter.addAll(itemFilmes);
+            adapter.notifyDataSetChanged();
+
+        }
+    }
+
+    public interface Callback {
+        void onItemSelect(ItemFilme itemFilme);
     }
 
 }

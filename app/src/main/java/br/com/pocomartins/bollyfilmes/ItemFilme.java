@@ -1,7 +1,8 @@
 package br.com.pocomartins.bollyfilmes;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
-import java.net.URI;
 
 /**
  * Created by Poço Martins on 1/21/2017.
@@ -9,30 +10,45 @@ import java.net.URI;
 
 public class ItemFilme implements Serializable {
 
-    private String id;
+    private Long id;
 
     private String titulo;
 
     private String descricao;
 
-    private URI imagem;
+    private String dataLancamento;
+
+    private String posterPath;
+
+    private String capaPath;
 
     private float avaliacao;
 
-    private String dataLancamento;
-
-    public ItemFilme (String titulo, String descricao, String dataLancamento, float avaliacao) {
+    public ItemFilme(Long id, String titulo, String descricao, String dataLancamento, String posterPath, String capaPath, float avaliacao) {
+        this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
         this.dataLancamento = dataLancamento;
+        this.posterPath = posterPath;
+        this.capaPath = capaPath;
         this.avaliacao = avaliacao;
     }
 
-    public String getId() {
+    public ItemFilme(JSONObject jsonObject)  throws Exception{
+        this.id = jsonObject.getLong("id");
+        this.titulo = jsonObject.getString("title");
+        this.descricao = jsonObject.getString("overview");
+        this.dataLancamento = jsonObject.getString("release_date");
+        this.posterPath = jsonObject.getString("poster_path");
+        this.capaPath = jsonObject.getString("backdrop_path");
+        this.avaliacao = (float) jsonObject.getDouble("vote_average");
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -52,12 +68,28 @@ public class ItemFilme implements Serializable {
         this.descricao = descricao;
     }
 
-    public URI getImagem() {
-        return imagem;
+    public String getDataLancamento() {
+        return dataLancamento;
     }
 
-    public void setImagem(URI imagem) {
-        this.imagem = imagem;
+    public void setDataLancamento(String dataLancamento) {
+        this.dataLancamento = dataLancamento;
+    }
+
+    public String getPosterPath() {
+        return posterPath;
+    }
+
+    public void setPosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+
+    public String getCapaPath() {
+        return capaPath;
+    }
+
+    public void setCapaPath(String capaPath) {
+        this.capaPath = capaPath;
     }
 
     public float getAvaliacao() {
@@ -66,13 +98,5 @@ public class ItemFilme implements Serializable {
 
     public void setAvaliacao(float avaliacao) {
         this.avaliacao = avaliacao;
-    }
-
-    public String getDataLancamento() {
-        return dataLancamento;
-    }
-
-    public void setDataLancamento(String dataLancamento) {
-        this.dataLancamento = dataLancamento;
     }
 }
