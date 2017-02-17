@@ -44,6 +44,15 @@ public class ItemFilme implements Serializable {
         this.avaliacao = (float) jsonObject.getDouble("vote_average");
     }
 
+    private String buildPath(String width, String path){
+        StringBuilder builder = new StringBuilder();
+        builder.append("http://image.tmdb.org/t/p/")
+                .append(width)
+                .append(path);
+        return builder.toString();
+
+    }
+
     public Long getId() {
         return id;
     }
@@ -77,7 +86,7 @@ public class ItemFilme implements Serializable {
     }
 
     public String getPosterPath() {
-        return posterPath;
+        return buildPath("w500",posterPath);
     }
 
     public void setPosterPath(String posterPath) {
@@ -85,7 +94,7 @@ public class ItemFilme implements Serializable {
     }
 
     public String getCapaPath() {
-        return capaPath;
+        return buildPath("w780", capaPath);
     }
 
     public void setCapaPath(String capaPath) {
