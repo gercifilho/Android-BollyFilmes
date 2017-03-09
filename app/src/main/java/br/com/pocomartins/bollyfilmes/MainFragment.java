@@ -3,7 +3,6 @@ package br.com.pocomartins.bollyfilmes;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.pocomartins.bollyfilmes.data.FilmesContract;
-import br.com.pocomartins.bollyfilmes.data.FilmesDBHelper;
 
 
 public class MainFragment extends Fragment {
@@ -45,7 +43,6 @@ public class MainFragment extends Fragment {
 
     private boolean useFilmeDestaque = false;
 
-    private FilmesDBHelper dbHelper;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,7 +83,6 @@ public class MainFragment extends Fragment {
             posicaoItem = savedInstanceState.getInt(KEY_POSICAO);
         }
 
-        dbHelper = new FilmesDBHelper(getContext());
         new FilmesAsyncTask().execute();
         return view;
     }
@@ -202,7 +198,6 @@ public class MainFragment extends Fragment {
         @Override
         protected void onPostExecute(List<ItemFilme> itemFilmes) {
 
-            SQLiteDatabase writableDatabase = dbHelper.getWritableDatabase();
 
             for (ItemFilme itemFilme: itemFilmes) {
                 ContentValues values = new ContentValues();
@@ -216,9 +211,10 @@ public class MainFragment extends Fragment {
                 String where = FilmesContract.FilmesEntry._ID + "=?";
                 String[] whereValues = new String[] {String.valueOf(itemFilme.getId())};
 
-                int update = writableDatabase.update(FilmesContract.FilmesEntry.TABLE_NAME, values, where, whereValues);
+                int update = getContext().getContentResolver().update(FilmesContract.FilmesEntry.CONTENT_URI, values, where, whereValues);
+
                 if(update == 0) {
-                     writableDatabase.insert(FilmesContract.FilmesEntry.TABLE_NAME, null, values);
+                    getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
                 }
             }
 
