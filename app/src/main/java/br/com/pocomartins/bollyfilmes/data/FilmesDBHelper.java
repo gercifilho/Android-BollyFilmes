@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class FilmesDBHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
 
     static final String DATABASE_NAME = "bollyfilmes.db";
 
@@ -27,6 +27,8 @@ public class FilmesDBHelper extends SQLiteOpenHelper {
                 FilmesContract.FilmesEntry.COLUMN_DESCRICAO  + " TEXT NOT NULL, " +
                 FilmesContract.FilmesEntry.COLUMN_POSTER_PATH + " TEXT NOT NULL, " +
                 FilmesContract.FilmesEntry.COLUMN_CAPA_PATH + " TEXT NOT NULL, " +
+                FilmesContract.FilmesEntry.COLUMN_DATA_LANC + " TEXT NOT NULL, " +
+                FilmesContract.FilmesEntry.COLUMN_POPULARIDADE + " REAL, " +
                 FilmesContract.FilmesEntry.COLUMN_AVALIACAO + " REAL " +
                 ");";
         db.execSQL(sqlTableFilmes);

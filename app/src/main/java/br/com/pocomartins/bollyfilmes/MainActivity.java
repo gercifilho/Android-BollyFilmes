@@ -1,6 +1,7 @@
 package br.com.pocomartins.bollyfilmes;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -8,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements MainFragment.Callback{
 
-    public static final String KEY_FILME = "Filme";
+    public static final String FILME_DETALHE_URI = "Filme";
     private boolean isTablet = false;
 
     @Override
@@ -34,14 +35,14 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
     }
 
     @Override
-    public void onItemSelect(ItemFilme itemFilme) {
+    public void onItemSelect(Uri uri) {
         if(isTablet) {
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
             FilmeDetalheFragment detalheFragment = new FilmeDetalheFragment();
             Bundle bundle = new Bundle();
-            bundle.putSerializable(MainActivity.KEY_FILME, itemFilme);
+            bundle.putParcelable(MainActivity.FILME_DETALHE_URI, uri);
             detalheFragment.setArguments(bundle);
 
             fragmentTransaction.replace(R.id.fragment_filme_detalhe, detalheFragment);
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
 
         } else {
             Intent intent = new Intent(this, FilmeDetalheActivity.class);
-            intent.putExtra(MainActivity.KEY_FILME, itemFilme);
+            intent.setData(uri);
             startActivity(intent);
         }
     }

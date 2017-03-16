@@ -1,14 +1,19 @@
 package br.com.pocomartins.bollyfilmes;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,13 +30,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import br.com.pocomartins.bollyfilmes.data.FilmesContract;
 
 
-public class MainFragment extends Fragment {
+public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private int posicaoItem = ListView.INVALID_POSITION;
 
@@ -43,13 +47,15 @@ public class MainFragment extends Fragment {
 
     private boolean useFilmeDestaque = false;
 
+    private static final int FILMES_LOADER = 0;
+
+    private ProgressDialog progressDialog;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-
     }
 
     @Override
@@ -59,9 +65,8 @@ public class MainFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         listView = (ListView) view.findViewById(R.id.list_filmes);
-        final ArrayList<ItemFilme> arrayList = new ArrayList<>();
 
-        adapter = new FilmesAdapter(getContext(), arrayList);
+        adapter = new FilmesAdapter(getContext(), null);
         adapter.setUseFilmeDestaque(useFilmeDestaque);
 
         listView.setAdapter(adapter);
@@ -70,10 +75,11 @@ public class MainFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ItemFilme itemFilme = arrayList.get(position);
+
+                Uri uri = FilmesContract.FilmesEntry.buildUriForFilmes(id);
                 view.setSelected(true);
                 Callback callback = (Callback) getActivity();
-                callback.onItemSelect(itemFilme);
+                callback.onItemSelect(uri);
                 posicaoItem = position;
             }
         });
@@ -82,6 +88,13 @@ public class MainFragment extends Fragment {
         if(savedInstanceState != null && savedInstanceState.containsKey(KEY_POSICAO)) {
             posicaoItem = savedInstanceState.getInt(KEY_POSICAO);
         }
+
+        progressDialog = new ProgressDialog(getContext());
+        progressDialog.setTitle(getString(R.string.pd_carregando_titulo));
+        progressDialog.setMessage(getString(R.string.pd_carregando_mensagem));
+        progressDialog.setCancelable(false);
+
+        getLoaderManager().initLoader(FILMES_LOADER, null, this);
 
         new FilmesAsyncTask().execute();
         return view;
@@ -97,11 +110,12 @@ public class MainFragment extends Fragment {
     }
 
     @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        if(posicaoItem != ListView.INVALID_POSITION && listView != null) {
-            listView.smoothScrollToPosition(posicaoItem);
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if(savedInstanceState != null) {
+            listView.smoothScrollToPosition(savedInstanceState.getInt(KEY_POSICAO));
         }
-        super.onViewStateRestored(savedInstanceState);
     }
 
     @Override
@@ -131,6 +145,55 @@ public class MainFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        getLoaderManager().restartLoader(FILMES_LOADER, null, this);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        progressDialog.show();
+
+        String[] projection = {
+                FilmesContract.FilmesEntry._ID,
+                FilmesContract.FilmesEntry.COLUMN_TITULO,
+                FilmesContract.FilmesEntry.COLUMN_DESCRICAO,
+                FilmesContract.FilmesEntry.COLUMN_DATA_LANC,
+                FilmesContract.FilmesEntry.COLUMN_POSTER_PATH,
+                FilmesContract.FilmesEntry.COLUMN_CAPA_PATH,
+                FilmesContract.FilmesEntry.COLUMN_AVALIACAO,
+                FilmesContract.FilmesEntry.COLUMN_POPULARIDADE
+        };
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String ordem = preferences.getString(getString(R.string.prefs_ordem_key),"popular");
+        String popularValue = getResources().getStringArray(R.array.prefs_ordem_values)[0];
+
+        String orderBy = null;
+        if(ordem.equals(popularValue)) {
+            orderBy = FilmesContract.FilmesEntry.COLUMN_POPULARIDADE + " DESC";
+        } else {
+            orderBy = FilmesContract.FilmesEntry.COLUMN_AVALIACAO + " DESC";
+        }
+
+        return new CursorLoader(getContext(), FilmesContract.FilmesEntry.CONTENT_URI, projection, null, null, orderBy);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.swapCursor(data);
+        progressDialog.dismiss();
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
+    }
+
     public class FilmesAsyncTask extends AsyncTask<Void, Void, List<ItemFilme>> {
 
         @Override
@@ -140,8 +203,8 @@ public class MainFragment extends Fragment {
             BufferedReader reader = null;
 
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String ordem = preferences.getString(getString(R.string.prefs_ordem_key),"");
-            String idioma = preferences.getString(getString(R.string.prefs_idioma_key),"");
+            String ordem = preferences.getString(getString(R.string.prefs_ordem_key),"popular");
+            String idioma = preferences.getString(getString(R.string.prefs_idioma_key),"pt-BR");
 
             try {
 
@@ -198,6 +261,10 @@ public class MainFragment extends Fragment {
         @Override
         protected void onPostExecute(List<ItemFilme> itemFilmes) {
 
+            if (itemFilmes == null) {
+                return;
+            }
+
 
             for (ItemFilme itemFilme: itemFilmes) {
                 ContentValues values = new ContentValues();
@@ -207,26 +274,25 @@ public class MainFragment extends Fragment {
                 values.put(FilmesContract.FilmesEntry.COLUMN_POSTER_PATH, itemFilme.getPosterPath());
                 values.put(FilmesContract.FilmesEntry.COLUMN_CAPA_PATH, itemFilme.getCapaPath());
                 values.put(FilmesContract.FilmesEntry.COLUMN_AVALIACAO, itemFilme.getAvaliacao());
+                values.put(FilmesContract.FilmesEntry.COLUMN_DATA_LANC, itemFilme.getDataLancamento());
+                values.put(FilmesContract.FilmesEntry.COLUMN_POPULARIDADE, itemFilme.getPopularidade());
 
                 String where = FilmesContract.FilmesEntry._ID + "=?";
                 String[] whereValues = new String[] {String.valueOf(itemFilme.getId())};
 
-                int update = getContext().getContentResolver().update(FilmesContract.FilmesEntry.CONTENT_URI, values, where, whereValues);
+                int update = getContext().getContentResolver().update(FilmesContract.FilmesEntry.buildUriForFilmes(itemFilme.getId()), values, null, null);
 
                 if(update == 0) {
                     getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
                 }
             }
 
-            adapter.clear();
-            adapter.addAll(itemFilmes);
-            adapter.notifyDataSetChanged();
 
         }
     }
 
     public interface Callback {
-        void onItemSelect(ItemFilme itemFilme);
+        void onItemSelect(Uri uri);
     }
 
 }

@@ -16,6 +16,8 @@
 
     <string name="menu_atualizar_label">Atualizar</string>
     <string name="manu_configuracoes_label">Configurações</string>
+    <string name="pd_carregando_titulo">Carregando....</string>
+    <string name="pd_carregando_mensagem">Por favor, aguarde!</string>
 
 
     <string-array name="prefs_ordem_values">

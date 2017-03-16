@@ -60,6 +60,8 @@ public class FilmesProvider extends ContentProvider {
                 throw new IllegalArgumentException("Uri não identificado: " + uri);
         }
 
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
         return cursor;
     }
 
@@ -91,6 +93,9 @@ public class FilmesProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Uri não identificado: " + uri);
         }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
         return FilmesContract.FilmesEntry.buildUriForFilmes(id);
     }
 
@@ -99,20 +104,24 @@ public class FilmesProvider extends ContentProvider {
 
         SQLiteDatabase writableDatabase = dbHelper.getWritableDatabase();
 
+        int delete = 0;
+
         switch (URI_MATCHER.match(uri)) {
             case FILME:
-                return writableDatabase.delete(FilmesContract.FilmesEntry.TABLE_NAME, selection, selectionArgs);
+                delete =  writableDatabase.delete(FilmesContract.FilmesEntry.TABLE_NAME, selection, selectionArgs);
 
             case FILME_ID:
                 selection = FilmesContract.FilmesEntry._ID + "=?";
                 selectionArgs = new String[] {String.valueOf(FilmesContract.FilmesEntry.getIdFromUri(uri))};
 
-                return writableDatabase.delete(FilmesContract.FilmesEntry.TABLE_NAME, selection, selectionArgs);
-
-            default:
-                throw new IllegalArgumentException("Uri não identificado: " + uri);
+                delete = writableDatabase.delete(FilmesContract.FilmesEntry.TABLE_NAME, selection, selectionArgs);
         }
 
+        if (delete != 0 ) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        return delete;
     }
 
     @Override
@@ -120,18 +129,22 @@ public class FilmesProvider extends ContentProvider {
 
         SQLiteDatabase writableDatabase = dbHelper.getWritableDatabase();
 
+        int update = 0;
+
         switch (URI_MATCHER.match(uri)) {
             case FILME:
-                return writableDatabase.update(FilmesContract.FilmesEntry.TABLE_NAME, values, selection, selectionArgs);
+                update = writableDatabase.update(FilmesContract.FilmesEntry.TABLE_NAME, values, selection, selectionArgs);
 
             case FILME_ID:
                 selection = FilmesContract.FilmesEntry._ID + "=?";
                 selectionArgs = new String[] {String.valueOf(FilmesContract.FilmesEntry.getIdFromUri(uri))};
 
-                return writableDatabase.update(FilmesContract.FilmesEntry.TABLE_NAME, values, selection, selectionArgs);
-
-            default:
-                throw new IllegalArgumentException("Uri não identificado: " + uri);
+                update = writableDatabase.update(FilmesContract.FilmesEntry.TABLE_NAME, values, selection, selectionArgs);
         }
+        if (update != 0 ) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        return update;
     }
 }

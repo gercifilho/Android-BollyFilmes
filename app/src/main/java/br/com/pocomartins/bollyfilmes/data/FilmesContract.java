@@ -35,6 +35,8 @@ public class FilmesContract {
         public static final String COLUMN_POSTER_PATH = "posterPath";
         public static final String COLUMN_CAPA_PATH = "capa";
         public static final String COLUMN_AVALIACAO = "avaliacao";
+        public static final String COLUMN_DATA_LANC = "dataLancamento";
+        public static final String COLUMN_POPULARIDADE = "popularidade";
 
         public static Uri buildUriForFilmes() {
             return CONTENT_URI.buildUpon().build();
