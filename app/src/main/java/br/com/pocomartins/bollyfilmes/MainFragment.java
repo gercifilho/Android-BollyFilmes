@@ -1,12 +1,10 @@
 package br.com.pocomartins.bollyfilmes;
 
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -24,15 +22,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
-
 import br.com.pocomartins.bollyfilmes.data.FilmesContract;
+import br.com.pocomartins.bollyfilmes.service.FilmesIntentService;
 
 
 public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
@@ -96,7 +87,9 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
         getLoaderManager().initLoader(FILMES_LOADER, null, this);
 
-        new FilmesAsyncTask().execute();
+        Intent intent = new Intent(getContext(), FilmesIntentService.class);
+        getActivity().startService(intent);
+        
         return view;
     }
 
@@ -128,7 +121,9 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
         switch (item.getItemId()) {
             case R.id.menu_atualizar:
-                new FilmesAsyncTask().execute();
+                Intent intent = new Intent(getContext(), FilmesIntentService.class);
+                getActivity().startService(intent);
+
                 Toast.makeText(getContext(), "Atualizando os filmes.....", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.menu_config:
@@ -194,104 +189,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         adapter.swapCursor(null);
     }
 
-    public class FilmesAsyncTask extends AsyncTask<Void, Void, List<ItemFilme>> {
-
-        @Override
-        protected List<ItemFilme> doInBackground(Void... params) {
-
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String ordem = preferences.getString(getString(R.string.prefs_ordem_key),"popular");
-            String idioma = preferences.getString(getString(R.string.prefs_idioma_key),"pt-BR");
-
-            try {
-
-                String urlBase = "https://api.themoviedb.org/3/movie/" + ordem + "?";
-                String apiKey = "api_key";
-                String language = "language";
-
-                Uri uriapi = Uri.parse(urlBase).buildUpon()
-                        .appendQueryParameter(apiKey, BuildConfig.TMDB_API_KEY)
-                        .appendQueryParameter(language,idioma)
-                        .build();
-
-                URL url = new URL(uriapi.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                InputStream inputStream = urlConnection.getInputStream();
-                if(inputStream == null) {
-                    return null;
-                }
-
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String linha;
-                StringBuffer buffer = new StringBuffer();
-
-                while ((linha = reader.readLine()) != null) {
-                    buffer.append(linha);
-                    buffer.append("\n");
-                }
-
-                return JsonUtil.fromJsonToList(buffer.toString());
-
-
-            } catch(IOException e) {
-                e.printStackTrace();
-
-            } finally {
-                if(urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-
-                if(reader != null){
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<ItemFilme> itemFilmes) {
-
-            if (itemFilmes == null) {
-                return;
-            }
-
-
-            for (ItemFilme itemFilme: itemFilmes) {
-                ContentValues values = new ContentValues();
-                values.put(FilmesContract.FilmesEntry._ID, itemFilme.getId());
-                values.put(FilmesContract.FilmesEntry.COLUMN_TITULO, itemFilme.getTitulo());
-                values.put(FilmesContract.FilmesEntry.COLUMN_DESCRICAO, itemFilme.getDescricao());
-                values.put(FilmesContract.FilmesEntry.COLUMN_POSTER_PATH, itemFilme.getPosterPath());
-                values.put(FilmesContract.FilmesEntry.COLUMN_CAPA_PATH, itemFilme.getCapaPath());
-                values.put(FilmesContract.FilmesEntry.COLUMN_AVALIACAO, itemFilme.getAvaliacao());
-                values.put(FilmesContract.FilmesEntry.COLUMN_DATA_LANC, itemFilme.getDataLancamento());
-                values.put(FilmesContract.FilmesEntry.COLUMN_POPULARIDADE, itemFilme.getPopularidade());
-
-                String where = FilmesContract.FilmesEntry._ID + "=?";
-                String[] whereValues = new String[] {String.valueOf(itemFilme.getId())};
-
-                int update = getContext().getContentResolver().update(FilmesContract.FilmesEntry.buildUriForFilmes(itemFilme.getId()), values, null, null);
-
-                if(update == 0) {
-                    getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
-                }
-            }
-
-
-        }
-    }
-
-    public interface Callback {
+      public interface Callback {
         void onItemSelect(Uri uri);
     }
 
