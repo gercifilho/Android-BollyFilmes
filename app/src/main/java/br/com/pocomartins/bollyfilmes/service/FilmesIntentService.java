@@ -1,7 +1,9 @@
 package br.com.pocomartins.bollyfilmes.service;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -115,5 +117,15 @@ public class FilmesIntentService extends IntentService {
         }
     }
 
+     public static class FilmesReceiver extends BroadcastReceiver{
+
+         @Override
+         public void onReceive(Context context, Intent intent) {
+
+             Intent intentService = new Intent(context, FilmesIntentService.class);
+             context.startService(intent);
+
+         }
+     }
 
 }
