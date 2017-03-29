@@ -40,5 +40,8 @@
         <item>Português</item>
     </string-array>
 
+    <string name="sync_account_type">bollyfilmes.pocomartins.com.br</string>
+    <string name="content_authority">br.com.pocomartins.bollyfilmes</string>
+
 
 </resources>
