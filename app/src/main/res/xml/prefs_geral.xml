@@ -17,6 +17,14 @@
         android:entryValues="@array/prefs_idiomas_values"
         android:entries="@array/prefs_Idioma_entries"/>
 
+    <CheckBoxPreference
+        android:title="@string/prefs_notif_filmes_titulo"
+        android:key="@string/prefs_notif_filmes_key"
+        android:summaryOff="@string/prefs_notif_filmes_off"
+        android:summaryOn="@string/prefs_notif_filmes_on"
+        android:defaultValue="@string/prefs_notif_filmes_default"/>
+
+
 
 
 

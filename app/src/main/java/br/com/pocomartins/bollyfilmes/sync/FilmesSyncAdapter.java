@@ -2,11 +2,14 @@ package br.com.pocomartins.bollyfilmes.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
@@ -14,6 +17,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +29,7 @@ import java.net.URL;
 import java.util.List;
 
 import br.com.pocomartins.bollyfilmes.BuildConfig;
+import br.com.pocomartins.bollyfilmes.FilmeDetalheActivity;
 import br.com.pocomartins.bollyfilmes.ItemFilme;
 import br.com.pocomartins.bollyfilmes.JsonUtil;
 import br.com.pocomartins.bollyfilmes.R;
@@ -37,6 +43,7 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static final int SYNC_INTERVAL = 60 * 720;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
+    public final static int NOTIFICATION_FILMES_ID = 1001;
 
     public FilmesSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -103,6 +110,7 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 if(update == 0) {
                     getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
+                    notify(itemFilme);
                 }
             }
 
@@ -123,6 +131,37 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
         }
+    }
+
+    public void notify(ItemFilme itemFilme) {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String notifyPrefKey = getContext().getString(R.string.prefs_notif_filmes_key);
+        String notifyDefault = getContext().getString(R.string.prefs_notif_filmes_default);
+        boolean notifyprefs = sharedPreferences.getBoolean(notifyPrefKey, Boolean.parseBoolean(notifyDefault));
+
+        if(!notifyprefs) {
+            return;
+        }
+
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext()).
+                setSmallIcon(R.mipmap.ic_launcher).
+                setContentTitle(itemFilme.getTitulo()).
+                setContentText(itemFilme.getDescricao());
+
+        Intent intent = new Intent(getContext(), FilmeDetalheActivity.class);
+        Uri uri = FilmesContract.FilmesEntry.buildUriForFilmes(itemFilme.getId());
+        intent.setData(uri);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getContext());
+        stackBuilder.addNextIntent(intent);
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_FILMES_ID, builder.build());
+
     }
 
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
